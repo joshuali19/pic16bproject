@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}
+PIC16B Final Project
+{% endblock %}
+
+{% block header %}
+Submit your Playlist Here!
+{% endblock %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data">
+    <div class="text-center">
+        <input type="file" value="Submit Playlist" accept=".json" id = "playlist" name = "playlist">
+    </div>
+    <div>
+    <button>Submit</button>
+  </div>
+  </form>
+    {% if names %}
+        Thank you for submitting a playlist! Here are the recommendations that we think you might enjoy!
+        {% for index, score in total_scores.items() %}
+<div>{{song_df['track_name'][index]}}: {{score}} </div>
+{% endfor %}
+        <!--{% for track_name in names %}
+<div> {{track_name }} </div>
+{% endfor %}-->
+    {% endif %}
+
+    {% if error %}
+        There has been an error. Please try to submit again. Make sure it is a .json file.
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,17 @@
+<!doctype html>
+<!--<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">-->
+<title>{% block title %}{% endblock %} - Spotify Song Recommender</title>
+<nav>
+  <h1 class="title">Spotify Song Recommender</h1>
+  <!-- <b>Navigation:</b> -->
+  <ul>
+      <li><a href="{{ url_for('recommend') }}">Get Recommendations</a></li>
+      <li><a href="{{ url_for('about')}}">About</a></li>
+  </ul>
+</nav>
+<section class="content">
+  <header>
+    {% block header %}{% endblock %}
+  </header>
+  {% block content %}{% endblock %}
+</section>
