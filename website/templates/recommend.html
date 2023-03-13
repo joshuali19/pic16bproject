@@ -5,22 +5,31 @@ PIC16B Final Project
 {% endblock %}
 
 {% block header %}
-Submit your Playlist Here!
+<h1> Song Recommender </h1>
 {% endblock %}
 
 {% block content %}
 <form method="post" enctype="multipart/form-data">
     <div class="text-center">
-        <input type="file" value="Submit Playlist" accept=".json" id = "playlist" name = "playlist">
+        <!--<input type="file" value="Submit Playlist" accept=".json" id = "playlist" name = "playlist">-->
+        <label class="custom-file-upload">
+    <input type="file" name = "playlist" accept=".json"/>
+    Attach Your Playlist Here!
+</label>
     </div>
-    <div>
+    <br>
+    <br>
+    <div class = "text-center">
     <button>Submit</button>
   </div>
   </form>
-    {% if names %}
-        Thank you for submitting a playlist! Here are the recommendations that we think you might enjoy!
-        {% for index, score in total_scores.items() %}
-<div>{{song_df['track_name'][index]}}: {{score}} </div>
+<br>
+<br>
+    {% if recs %}
+        <p class="message">Thank you for submitting a playlist! Here are the recommendations that we think you might enjoy!
+<br><br>
+        {% for rec in recs %}
+<p>&#9;- {{rec}} </p>
 {% endfor %}
         <!--{% for track_name in names %}
 <div> {{track_name }} </div>

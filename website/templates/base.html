@@ -1,5 +1,5 @@
 <!doctype html>
-<!--<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">-->
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <title>{% block title %}{% endblock %} - Spotify Song Recommender</title>
 <nav>
   <h1 class="title">Spotify Song Recommender</h1>
@@ -13,5 +13,6 @@
   <header>
     {% block header %}{% endblock %}
   </header>
+    <br>
   {% block content %}{% endblock %}
 </section>

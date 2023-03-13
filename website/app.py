@@ -36,180 +36,58 @@ sp = spotipy.Spotify(client_credentials_manager =
 import io
 import base64
 
-song_df = pd.read_csv('./songs_1000p.csv') # initial data frame
-DB_NAME = './songs_db.sqlite' # database to write to
+song_df = pd.read_csv('./songs_unique.csv') # song dataframe
+feats_df = pd.read_csv('./norm_song_feats.csv') # normalized features data frame
 
-def get_song_db():
+indices = pd.Series(song_df.index, index=song_df['uri']) # indices
+
+def get_similarity_scores(df, feat_df, uri, n, model_type = cosine_similarity):
     '''
-    Retrieves the song database
-    @ output:
-    - g.message_db: a database storing songs
-    '''
-    try:
-        # returns a database
-        return g.songs_db
-    except:
-        # connect to a database
-        with sqlite3.connect(DB_NAME) as conn:
-            g.songs_db = conn
-            
-            # create a table if it doesn't exist
-            cursor = conn.cursor()
-            query = '''
-                    CREATE TABLE IF NOT EXISTS songs (
-                    danceability DOUBLE,
-                    energy DOUBLE,
-                    key INT,
-                    loudness DOUBLE,
-                    mode INT,
-                    speechiness DOUBLE,
-                    acousticness DOUBLE,
-                    instrumentalness DOUBLE,
-                    liveness DOUBLE,
-                    valence DOUBLE,
-                    tempo DOUBLE,
-                    id TEXT PRIMARY KEY,
-                    uri TEXT UNIQUE,
-                    duration_ms INT,
-                    time_signature INT,
-                    track_name TEXT);
-                    '''
-            cursor.execute(query)
-            # gets data from data frame, inserts it into database.
-            for row in song_df.itertuples():
-                cursor.execute('''
-                    INSERT or REPLACE INTO songs (danceability, energy, key, loudness,
-                    mode, speechiness, acousticness, instrumentalness, liveness, valence,
-                    tempo, id, uri, duration_ms, time_signature, track_name)
-                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-                    ''',
-                                (row.danceability, 
-                                row.energy,
-                                row.key,
-                                row.loudness,
-                               row.mode,
-                               row.speechiness,
-                               row.acousticness,
-                               row.instrumentalness,
-                               row.liveness,
-                               row.valence,
-                               row.tempo,
-                               row.id,
-                               row.uri,
-                               row.duration_ms,
-                               row.time_signature,
-                               row.track_name)
-                    )
-                conn.commit()
-            # return the database
-            return g.songs_db
-        
-def get_song_df():
-    with get_song_db() as conn:
-        sql_query = pd.read_sql_query ('''
-                               SELECT
-                               *
-                               FROM songs
-                               ''', conn)
-        song_df = pd.DataFrame(sql_query, columns = ['danceability', 'energy', 'key', 'loudness',
-                    'mode', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence',
-                    'tempo', 'id', 'uri', 'duration_ms', 'time_signature', 'track_name'])
-        return song_df
-        
-def get_audio_features(song_uri):
-    '''
-    gets the audio features of a song
+    gets the similarity scores for songs in the dataframe.
     @ inputs:
-    - song_uri (str): the track's URI
-    @ output:
-    - gets a dataframe of the song's audio features
-    '''
-    song_feats = sp.audio_features(song_uri.split(':')[2])
-    song_feats_df = pd.DataFrame(song_feats, range(len(song_feats)))
-    cols_drop = ['track_href', 'analysis_url', 'type']
-    return song_feats_df.drop(columns = cols_drop)
-
-def insert_song(request):
-    '''
-    inserts song into database
-    @ input:
-    - song_feats_df (df): dataframe of song features
-    @ output:
-    None - will add observation to database.
-    '''
-    playlist = request.files['playlist']
-    # print(playlist)
-    # f = open(playlist)
-    # js = f.read()
-    # f.close()
-    playlist_data = playlist.read()
-    
-    playlist.close()
-    playlist_data2 = json.loads(playlist_data)
-    
-    with get_song_db() as conn:
-        cursor = conn.cursor()
-        track_uris = []
-        track_names = []
-        for track in playlist_data2['tracks']:
-            track_uris.append(track['track_uri'])
-            track_names.append(track['track_name'])
-            row = get_audio_features(track['track_uri'])
-            row['track_name'] = track['track_name']
-            cursor.execute('''
-                    INSERT or REPLACE INTO songs (danceability, energy, key, loudness,
-                    mode, speechiness, acousticness, instrumentalness, liveness, valence,
-                    tempo, id, uri, duration_ms, time_signature, track_name)
-                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-                    ''',(float(row.danceability), 
-                        float(row.energy),
-                        int(row.key),
-                        float(row.loudness),
-                       int(row['mode']),
-                       float(row.speechiness),
-                       float(row.acousticness),
-                       float(row.instrumentalness),
-                       float(row.liveness),
-                       float(row.valence),
-                       int(row.tempo),
-                       str(row.id),
-                       str(row.uri),
-                       int(row.duration_ms),
-                       int(row.time_signature),
-                       str(row.track_name)))
-            conn.commit()
-        return track_uris, track_names
-    
-
-def generate_similarity_score(song_uri, track_name):
-    '''
-    gets the top n songs to recommend songs similar to one song.
-    @ inputs:
-    - song_uri (str): song's unique identifier
+    - df (pd.DataFrame): input dataframe with audio features
+    - song_title (str): title of track
+    - n (int): number of recommended songs
+    - model_type (df): gets the cosine similarity of big matrix
     @ outputs:
     - pandas series. of recommended songs
     '''
-    song_feats_df = get_audio_features(song_uri)
-    song_feats_df['track_name'] = track_name
-    song_df = get_song_df()
-        # print (df)
-    index = song_df.index[0]
-    nonnum_cols = ['id', 'uri', 'track_name']
-    song_df_num = song_df.drop(columns = nonnum_cols)
-    scaler = MinMaxScaler()
-    normalized_song_df = scaler.fit_transform(song_df_num)
-    # print(song_feats_df)
-    tfidf = cosine_similarity(normalized_song_df[index].reshape((1, normalized_song_df.shape[1])), normalized_song_df[:])[0]
-    # print(tfidf)
+    # Get song indices
+    index=indices[uri]
     
+    numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
+    num_df = feat_df.select_dtypes(include=numerics)
+    # print(index)
+    tfidf = model_type(num_df.iloc[index].values.reshape(1, -1), num_df[:].drop(index = index))[0]
+    # print(tfidf[0])
     # Get list of songs for given songs
     score=list(enumerate(tfidf))
-    
+    # print(score)
     # Sort the most similar songs
-    similarity_score = sorted(score,key = lambda x:x[1],reverse = True)[0:10]
+    similarity_score = sorted(score,key = lambda x:x[1],reverse = True)
+    
     return Counter(dict(similarity_score))
+    
+def get_top_songs(playlist, song_df, feat_df, n = 10):
+    
+    total_score = Counter()
+    for track in playlist['tracks']:
+            total_score += get_similarity_scores(song_df, feat_df, 
+                            track['track_uri'], 5)
+    topn_index = indices[sorted(dict(total_score), key = lambda x: x, reverse = True)[0:n]].index
 
-# def total_scores()
+    return [song_df['track_name'][song_df['uri'] == uri].values[0] for uri in topn_index]
+
+def get_file(request):
+    '''
+    gets the file from the request.
+    '''
+    file = request.files["playlist"]
+    file_data = file.read().decode("utf-8")
+    file.close()
+    playlist_data = json.loads(file_data)
+    return playlist_data
+
 ### stuff from last class
 app = Flask(__name__)
 
@@ -218,17 +96,15 @@ def recommend():
     if request.method == 'GET':
         return render_template('recommend.html') # default recommend.html display
     else: # if someone posts
-        # try:
+        try:
             # insert the message to the database
-            
-            track_uris, track_names = insert_song(request)
-            total_scores = generate_similarity_score(track_uris[0], track_names[0])
-            song_df = get_song_df()
+            playlist = get_file(request)
+            top_songs = get_top_songs(playlist, song_df, feats_df)
             # display submit.html with conditions
-            return render_template('recommend.html', names = track_names, total_scores = total_scores, song_df = song_df)
-        # except:
+            return render_template('recommend.html', recs = top_songs)
+        except:
             # return an error
-            # return render_template('recommend.html', error = True)
+            return render_template('recommend.html', error = True)
 
 @app.route('/about/')
 def about():
