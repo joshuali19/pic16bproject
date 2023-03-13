@@ -55,37 +55,56 @@ def get_similarity_scores(df, feat_df, uri, n, model_type = cosine_similarity):
     # Get song indices
     index=indices[uri]
     
+    # get numeric columns from song dataframe
     numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
     num_df = feat_df.select_dtypes(include=numerics)
-    # print(index)
+    
+    # get the cosine similarity between the song, and the other songs.
     tfidf = model_type(num_df.iloc[index].values.reshape(1, -1), num_df[:].drop(index = index))[0]
-    # print(tfidf[0])
-    # Get list of songs for given songs
+    
+    # Get list of scores of similarity to songs
     score=list(enumerate(tfidf))
-    # print(score)
+    
     # Sort the most similar songs
     similarity_score = sorted(score,key = lambda x:x[1],reverse = True)
     
+    # return a dictionary that can be added together
     return Counter(dict(similarity_score))
-    
+
+
 def get_top_songs(playlist, song_df, feat_df, n = 10):
-    
+    '''
+    Gets the top songs of a playlist
+    @ inputs:
+    - playlist (dict): playlist that includes track info
+    - song_df (dataframe): dataframe containing more track info
+    - feat_df (dataframe): dataframe of same dimensions as song_df, normalized features
+    @ outputs:
+    - list of the top n songs to suggest to user.
+    '''
     total_score = Counter()
+    # for each track
     for track in playlist['tracks']:
+        # get all the similarity scores, add it up according to song index
             total_score += get_similarity_scores(song_df, feat_df, 
                             track['track_uri'], 5)
+        # sort it by summed values of similarity
     topn_index = indices[sorted(dict(total_score), key = lambda x: x, reverse = True)[0:n]].index
-
+    
+    # return the track names that correspond to the URI's.
     return [song_df['track_name'][song_df['uri'] == uri].values[0] for uri in topn_index]
 
 def get_file(request):
     '''
     gets the file from the request.
     '''
+    
+    # reads file from request
     file = request.files["playlist"]
     file_data = file.read().decode("utf-8")
     file.close()
-    playlist_data = json.loads(file_data)
+    
+    playlist_data = json.loads(file_data) # loads it through json
     return playlist_data
 
 ### stuff from last class
@@ -97,10 +116,10 @@ def recommend():
         return render_template('recommend.html') # default recommend.html display
     else: # if someone posts
         try:
-            # insert the message to the database
+            # get playlist, and find top songs
             playlist = get_file(request)
             top_songs = get_top_songs(playlist, song_df, feats_df)
-            # display submit.html with conditions
+            # display the top songs
             return render_template('recommend.html', recs = top_songs)
         except:
             # return an error
@@ -109,9 +128,7 @@ def recommend():
 @app.route('/about/')
 def about():
     try:
-        # get 5 random messages
-        # msgs = random_messages(5)
-        # display it
+        # about page for creators
         return render_template('about.html', msgs = msgs)
     except:
         # return an error
