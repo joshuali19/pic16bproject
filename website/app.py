@@ -86,6 +86,7 @@ def get_top_songs(playlist, song_df, feat_df, n = 10):
     # for each track
     for track in playlist['tracks']:
         # get all the similarity scores, add it up according to song index
+        if track['track_uri'] in indices.keys():
             total_score += get_similarity_scores(song_df, feat_df, 
                             track['track_uri'], 5)
         # sort it by summed values of similarity
@@ -93,6 +94,33 @@ def get_top_songs(playlist, song_df, feat_df, n = 10):
     
     # return the track names that correspond to the URI's.
     return [song_df['track_name'][song_df['uri'] == uri].values[0] for uri in topn_index]
+
+def get_playlist_track_URIs(playlist_id):
+    '''
+    gets the track URIs from a Spotify playlist
+    @ inputs:
+    - playlist_id (str)
+        The unique identifier for the Spotify playlist.
+    @ outputs:
+    - track_uris (list of str)
+        A list of the track URIs for all tracks in the playlist.
+    - track_names (list of str)
+        A list of the track names for all tracks in the playlist.
+    '''
+    # Set up authorization using the Spotify client ID and secret
+    client_credentials_manager = SpotifyClientCredentials(client_id='bdf64242b8364ab5b264d3c14e8e9af6', client_secret='3ed931eb80d8412292a50a10ed96e611')
+    sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
+    
+    # Get track URIs and names from playlist
+    results = sp.playlist_tracks(playlist_id)
+    tracks = results['items']
+    playlist_tracks = []
+    for track in tracks:
+        track_uri = track['track']['uri']
+        playlist_tracks.append({'track_uri': track_uri})
+    
+    print({"tracks": playlist_tracks})
+    return {"tracks": playlist_tracks}
 
 def get_file(request):
     '''
@@ -115,13 +143,20 @@ def recommend():
     if request.method == 'GET':
         return render_template('recommend.html') # default recommend.html display
     else: # if someone posts
-        try:
+        # try:
             # get playlist, and find top songs
-            playlist = get_file(request)
+            playlist = request.form['playlist_id']
+            
+            if not playlist:
+                playlist = get_file(request)
+            else:
+                # get track URIs and names from playlist using Spotify API
+                playlist = get_playlist_track_URIs(playlist)
+            
             top_songs = get_top_songs(playlist, song_df, feats_df)
             # display the top songs
             return render_template('recommend.html', recs = top_songs)
-        except:
+        # except:
             # return an error
             return render_template('recommend.html', error = True)
 
