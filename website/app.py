@@ -143,7 +143,7 @@ def recommend():
     if request.method == 'GET':
         return render_template('recommend.html') # default recommend.html display
     else: # if someone posts
-        # try:
+        try:
             # get playlist, and find top songs
             playlist = request.form['playlist_id']
             
@@ -156,7 +156,7 @@ def recommend():
             top_songs = get_top_songs(playlist, song_df, feats_df)
             # display the top songs
             return render_template('recommend.html', recs = top_songs)
-        # except:
+        except:
             # return an error
             return render_template('recommend.html', error = True)
 
