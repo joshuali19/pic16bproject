@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+
+{% block title %}
+PIC16B Final Project
+{% endblock %}
+
+{% block content %}
+  <body>
+    <h1>How to Find a Playlist ID on Spotify</h1>
+    <ol>
+      <li>Open Spotify and go to the playlist that you want to find the ID for.</li>
+      <li>Click on the three dots that appear next to the playlist name.</li>
+      <li>A drop-down menu will appear. Click on the "Share" option.</li>
+      <li>A new window will appear with several sharing options. Click on the "Copy Link" button.</li>
+      <li>Paste the link you just copied into a text editor or note-taking app.</li>
+      <li>Look for the section of the link that starts with "/playlist/". The playlist ID is the combination of numbers and letters that follow this section, up to the next forward slash "/" or the question mark "?", if it exists.</li>
+      <li>If the link has a question mark "?", make sure to only copy the characters of the playlist ID before the question mark, as the additional parameters are not part of the playlist ID.</li>
+      <li>Once you've identified the correct playlist ID, you can use it to share your playlist with others, or to use it in third-party applications that require a playlist ID.</li>
+    </ol>
+  </body>
+{% endblock %}

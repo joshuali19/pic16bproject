@@ -168,3 +168,12 @@ def about():
     except:
         # return an error
         return render_template('about.html', error = True)
+
+@app.route('/tutorial/')
+def tutorial():
+    try:
+        # tutorial page for how to find playlist id
+        return render_template('tutorial.html', msgs = msgs)
+    except:
+        # return an error
+        return render_template('tutorial.html', error = True)

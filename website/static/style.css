@@ -50,9 +50,10 @@ nav ul  {
     margin: 0;
     padding: 0;
     background: #7d7d7d;
-    width: 35%;
+    width: 60%;
     border-radius: 25px;
     color: white;
+    justify-content: center;
 }
 
 nav ul li a {
