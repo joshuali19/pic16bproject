@@ -147,6 +147,7 @@ def recommend():
             # get playlist, and find top songs
             playlist = request.form['playlist_id']
             
+            # checks to see if playlist has been submitted as ID or json file
             if not playlist:
                 playlist = get_file(request)
             else:
