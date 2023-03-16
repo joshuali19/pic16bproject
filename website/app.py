@@ -101,11 +101,11 @@ def get_playlist_track_URIs(playlist_id):
     @ inputs:
     - playlist_id (str)
         The unique identifier for the Spotify playlist.
-    @ outputs:
-    - track_uris (list of str)
-        A list of the track URIs for all tracks in the playlist.
-    - track_names (list of str)
-        A list of the track names for all tracks in the playlist.
+    @ output:
+    dict containing: track_uris (list of str)
+                         A list of the track URIs for all tracks in the playlist.
+                     track_names (list of str)
+                            A list of the track names for all tracks in the playlist.
     '''
     # Set up authorization using the Spotify client ID and secret
     client_credentials_manager = SpotifyClientCredentials(client_id='bdf64242b8364ab5b264d3c14e8e9af6', client_secret='3ed931eb80d8412292a50a10ed96e611')
@@ -119,7 +119,6 @@ def get_playlist_track_URIs(playlist_id):
         track_uri = track['track']['uri']
         playlist_tracks.append({'track_uri': track_uri})
     
-    print({"tracks": playlist_tracks})
     return {"tracks": playlist_tracks}
 
 def get_file(request):
