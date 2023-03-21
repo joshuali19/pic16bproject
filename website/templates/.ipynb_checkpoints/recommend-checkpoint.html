@@ -11,13 +11,22 @@ PIC16B Final Project
 {% block content %}
 <form method="post" enctype="multipart/form-data">
     <div class="text-center">
-        <!--<input type="file" value="Submit Playlist" accept=".json" id = "playlist" name = "playlist">-->
-        <label class="custom-file-upload">
-    <input type="file" name = "playlist" accept=".json"/>
+        <input type="file" value="Submit Playlist" accept=".json" id = "playlist" name = "playlist">
+        <label for="playlist" class="custom-file-upload">
     Attach Your Playlist Here!
 </label>
     </div>
     <br>
+    <!-- <input type="file" name = "playlist" accept=".json"/> -->
+    <br>
+    <div class="text-center">
+    <p>OR</p>
+    <br>
+    <p>Enter a Spotify playlist ID:</p>
+    <p>(<a href="/tutorial/">Tutorial to find playlist ID</a>)</p>
+    <input type="text" name="playlist_id">
+    </div>
+    <br><br>
     <br>
     <div class = "text-center">
     <button>Submit</button>
@@ -29,7 +38,8 @@ PIC16B Final Project
         <p class="message">Thank you for submitting a playlist! Here are the recommendations that we think you might enjoy!
 <br><br>
         {% for rec in recs %}
-<p>&#9;- {{rec}} </p>
+<!--<p>{{rec[2]}}</p>-->
+<p>&#9;- <a href={{rec[2]}} target="_blank">{{rec[0]}} - {{rec[1]}} </a></p>
 {% endfor %}
         <!--{% for track_name in names %}
 <div> {{track_name }} </div>

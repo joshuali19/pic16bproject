@@ -38,7 +38,8 @@ PIC16B Final Project
         <p class="message">Thank you for submitting a playlist! Here are the recommendations that we think you might enjoy!
 <br><br>
         {% for rec in recs %}
-<p>&#9;- {{rec}} </p>
+<!--<p>{{rec[2]}}</p>-->
+<p>&#9;- <a href={{rec[2]}} target="_blank">{{rec[0]}} - {{rec[1]}} </a></p>
 {% endfor %}
         <!--{% for track_name in names %}
 <div> {{track_name }} </div>

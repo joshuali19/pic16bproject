@@ -93,7 +93,9 @@ def get_top_songs(playlist, song_df, feat_df, n = 10):
     topn_index = indices[sorted(dict(total_score), key = lambda x: x, reverse = True)[0:n]].index
     
     # return the track names that correspond to the URI's.
-    return [song_df['track_name'][song_df['uri'] == uri].values[0] for uri in topn_index]
+    return [(song_df['track_name'][song_df['uri'] == uri].values[0],
+            song_df['artist_name'][song_df['uri'] == uri].values[0],
+            '//open.spotify.com/track/' + song_df['id'][song_df['uri'] == uri].values[0]) for uri in topn_index]
 
 def get_playlist_track_URIs(playlist_id):
     '''
