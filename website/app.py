@@ -41,6 +41,19 @@ feats_df = pd.read_csv('./norm_song_feats.csv') # normalized features data frame
 
 indices = pd.Series(song_df.index, index=song_df['uri']) # indices
 
+def get_song_db():
+    '''
+    returns the database as a sql table.
+    '''
+    try:
+        return g.song_db
+    except:
+        with sqlite3.connect('./song_db.sqlite') as conn:
+            g.song_db = conn
+            song_df.to_sql('songs', con = conn, if_exists='replace')
+            return g.song_db
+            
+
 def get_similarity_scores(df, feat_df, uri, n, model_type = cosine_similarity):
     '''
     gets the similarity scores for songs in the dataframe.
