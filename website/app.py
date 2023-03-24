@@ -199,7 +199,7 @@ def tf_idf_encoder(uri, playlist):
 
 def tf_idf_similarity(playlist, n = 10):
     #creating a tf-idf vector based on the user playlist
-    tf_idf_playlist = [tf_idf_encoder(uri, playlist) for uri in tf_idf_df.index]
+    tf_idf_playlist = [tf_idf_encoder(uri, playlist)*(1/(len(playlist['tracks']+50))) for uri in tf_idf_df.index]
     #computing similarity between input playlist and all other playlists w.r.t. tf-idf metric
     tf_idf_similarity = cosine_similarity([tf_idf_playlist], tf_idf_df).flatten()
     #creating an empty counter to store total similarity score
