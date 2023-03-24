@@ -16,7 +16,9 @@ tf_df = tf_df.set_index('pid')
 #tf_idf_df = tf_idf_df.set_index('uri')
 
 def repetition_blocker(dict, playlist):
+    #iterating through each track in user input playlist
     for track in playlist['tracks']:
+        #setting total similarity score negative if present
         dict[track['track_uri']] = -1
 
 def item_similarity(uri):
