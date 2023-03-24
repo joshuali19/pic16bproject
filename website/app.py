@@ -42,12 +42,12 @@ feats_df = pd.read_csv('./norm_song_feats.csv') # normalized features data frame
 binary_df = pd.read_csv('./itemsessionbinary.csv')
 idf_df = pd.read_csv('./idf_df.csv')
 tf_df = pd.read_csv('./tf_df.csv')
-#tf_idf_df = pd.read_csv('./tf_idf_df.csv')
+tf_idf_df = pd.read_csv('./tf_idf_df.csv')
 
 binary_df = binary_df.set_index('uri')
 idf_df = idf_df.set_index('uri')
-tf_df = tf_df.set_index('pid')
-#tf_idf_df = tf_idf_df.set_index('uri')
+#tf_df = tf_df.set_index('pid')
+tf_idf_df = tf_idf_df.set_index('uri')
 
 
 indices = pd.Series(song_df.index, index=song_df['uri']) # indices
