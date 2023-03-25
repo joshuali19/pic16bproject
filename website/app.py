@@ -39,10 +39,10 @@ import base64
 
 song_df = pd.read_csv('./songs_unique.csv') # song dataframe
 feats_df = pd.read_csv('./norm_song_feats.csv') # normalized features data frame
-binary_df = pd.read_csv('./itemsessionbinary.csv')
-idf_df = pd.read_csv('./idf_df.csv')
-tf_df = pd.read_csv('./tf_df.csv')
-tf_idf_df = pd.read_csv('./tf_idf_df.csv')
+binary_df = pd.read_csv('./itemsessionbinary.csv') #binary encoding, with row/column corresponding to song/playlist
+idf_df = pd.read_csv('./idf_df.csv') #idf values for each unique song
+tf_df = pd.read_csv('./tf_df.csv') #tf values for each unique song
+tf_idf_df = pd.read_csv('./tf_idf_df.csv') #tf/df values, with row/column corresponding to song/playlist
 
 binary_df = binary_df.set_index('uri')
 idf_df = idf_df.set_index('uri')
@@ -65,6 +65,14 @@ def get_song_db():
             return g.song_db
             
 def repetition_blocker(dict, playlist):
+    '''
+    removes songs in the user's playlist from consideration by assigning them a negative similarity score
+    @ inputs:
+    - dict (dict/counter): dictionary containing uri as keys and similarity scores as values
+    - playlist (dict): the user's input dictionary
+    @ outputs:
+    - N/A
+    '''
     #iterating through each track in user input playlist
     for track in playlist['tracks']:
         #setting total similarity score negative if present
@@ -128,6 +136,13 @@ def get_top_songs(playlist, song_df, feat_df, n = 10):
             '//open.spotify.com/track/' + song_df['id'][song_df['uri'] == items].values[0]) for items in topn_index]
 
 def item_similarity(uri):
+    '''
+    gets the cosine similarity between an input song and every other song in the dataset
+    @ inputs:
+    - uri (string): input song's uri
+    @ outputs:
+    - counter dictionary whose keys are uri values of each song in dataset, values are similarity to input song
+    '''
     #identifying row in binary_df corresponding to input song
     song_row = binary_df.loc[uri].values.reshape(1, -1)
     #computing similarity between input song and all other songs
@@ -140,6 +155,14 @@ def item_similarity(uri):
     return Counter(similarity_dict)
 
 def get_top_items(playlist, n = 10):
+    '''
+    determines which songs to recommend by summing binary item-based similarity for songs in user playlist, weighted with idf
+    @ inputs:
+    - playlist (dict): playlist that includes track info
+    - n (int): number of songs to recommend ; 10 for us
+    @ outputs:
+    - a list of tuples containing track name, artist name, and track link for unique songs with highest similarity score
+    '''
     #creating an empty counter to store total similarity score
     total_score = Counter()
     for track in playlist['tracks']:
@@ -160,6 +183,14 @@ def get_top_items(playlist, n = 10):
             '//open.spotify.com/track/' + song_df['id'][song_df['uri'] == uri].values[0]) for uri in top_songs]
 
 def is_uri_in_playlist(uri, playlist):
+    '''
+    determines whether or not each song in the dataset is in the user's playlist
+    @ inputs:
+    -uri (str): input song's uri
+    - playlist (dict): playlist that includes track info
+    @ outputs:
+    - true or false depending on whether or not song is in playlist
+    '''
     #iterating through each track in user input playlist
     for track in playlist['tracks']:
         #checking if desired URI matches a track's URI
@@ -170,6 +201,15 @@ def is_uri_in_playlist(uri, playlist):
     return False
 
 def session_similarity(playlist, n = 10):
+    '''
+    determines which songs to recommend by summing binary session-based similarities of playlists containing
+    each song, weighted with IDF
+    @ inputs:
+    - playlist (dict): playlist that includes track info
+    - n (int): number of songs to recommend ; 10 for us
+    @ outputs:
+    - a list of tuples containing track name, artist name, and track link for unique songs with highest similarity score
+    '''
     #creating a binary encoding of the user input playlist w.r.t. dataset
     encoded_playlist = [int(is_uri_in_playlist(uri, playlist)) for uri in binary_df.index]
     #computing similarity between input playlist and all other playlists
@@ -190,6 +230,14 @@ def session_similarity(playlist, n = 10):
             '//open.spotify.com/track/' + song_df['id'][song_df['uri'] == uri].values[0]) for uri in top_songs]
 
 def tf_idf_encoder(uri, playlist):
+    '''
+    prepares user playlist for tf_idf by checking if a song is in the user's playlist and providing IDF accordingly
+    @ inputs:
+    -uri (str): input song's uri
+    - playlist (dict): playlist that includes track info
+    @ outputs:
+    - the idf value of input song associated with uri if in playlist, 0 otherwise
+    '''
     #iterating through each track in user input playlist
     for track in playlist['tracks']:
         #checking if desired URI matches a track's URI
@@ -200,9 +248,17 @@ def tf_idf_encoder(uri, playlist):
     return 0
 
 def tf_idf_similarity(playlist, n = 10):
+    '''
+    determines which songs to recommend by summing session-based TF-IDF encoded similarities of playlists containing each song
+    @ inputs:
+    - playlist (dict): playlist that includes track info
+    - n (int): number of songs to recommend ; 10 for us
+    @ outputs:
+    - a list of tuples containing track name, artist name, and track link for unique songs with highest similarity score
+    '''
     #creating a tf-idf vector based on the user playlist
     tf_idf_playlist = [tf_idf_encoder(uri, playlist)*(1/(len(playlist['tracks'])+50)) for uri in tf_idf_df.index]
-    #computing similarity between input playlist and all other playlists w.r.t. tf-idf metric
+    #computing similarity between input playlist and all other playlists w.r.t. tf-idf values
     tf_idf_similarity = cosine_similarity(tf_idf_df.values.T, [tf_idf_playlist]).flatten()
     #creating an empty counter to store total similarity score
     total_score = {}
