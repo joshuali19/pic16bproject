@@ -37,13 +37,22 @@ PIC16B Final Project
     {% if recs %}
         <p class="message">Thank you for submitting a playlist! Here are the recommendations that we think you might enjoy!
 <br><br>
-        {% for rec in recs %}
-<!--<p>{{rec[2]}}</p>-->
+<h2> Feature Similarity </h2>
+        {% for rec in recs[0:9] %}
 <p>&#9;- <a href={{rec[2]}} target="_blank">{{rec[0]}} - {{rec[1]}} </a></p>
 {% endfor %}
-        <!--{% for track_name in names %}
-<div> {{track_name }} </div>
-{% endfor %}-->
+<h2> Item Similarity </h2>
+        {% for rec in recs[10:19] %}
+<p>&#9;- <a href={{rec[2]}} target="_blank">{{rec[0]}} - {{rec[1]}} </a></p>
+{% endfor %}
+<h2> Session Similarity </h2>
+        {% for rec in recs[20:29] %}
+<p>&#9;- <a href={{rec[2]}} target="_blank">{{rec[0]}} - {{rec[1]}} </a></p>
+{% endfor %}
+<h2> TF-IDF Similarity </h2>
+        {% for rec in recs[30:39] %}
+<p>&#9;- <a href={{rec[2]}} target="_blank">{{rec[0]}} - {{rec[1]}} </a></p>
+{% endfor %}
     {% endif %}
 
     {% if error %}

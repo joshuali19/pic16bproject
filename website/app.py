@@ -153,7 +153,6 @@ def get_top_items(playlist, n = 10):
     repetition_blocker(total_score, playlist)
     #using heap to find list of URIs associated with highest total similarity scores
     top_songs = [items[0] for items in heapq.nlargest(n, total_score.items(), key=lambda x: x[1])]
-    print(top_songs)
     #top_songs = heapq.nlargest(n, total_score.items(), key=lambda x: x[1])
     #returning a list of tuples containing the track name, artist name, and a link to the song for the most similar songs
     return [(song_df['track_name'][song_df['uri'] == uri].values[0],
@@ -276,10 +275,11 @@ def recommend():
                 # get track URIs and names from playlist using Spotify API
                 playlist = get_playlist_track_URIs(playlist)
             
-            top_songs = get_top_songs(playlist, song_df, feats_df)
-            #top_songs_item = get_top_items(playlist, n = 10)
-            #top_songs_session = session_similarity(playlist, n=10)
-            #top_songs_tf_idf = tf_idf_similarity(playlist, n=10)
+            top_songs_feature = get_top_songs(playlist, song_df, feats_df)
+            top_songs_item = get_top_items(playlist, n = 10)
+            top_songs_session = session_similarity(playlist, n=10)
+            top_songs_tf_idf = tf_idf_similarity(playlist, n=10)
+            top_songs = top_songs_feature+top_songs_item+top_songs_session+top_songs_tf_idf
             # display the top songs
             return render_template('recommend.html', recs = top_songs)
         except:
