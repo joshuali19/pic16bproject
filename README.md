@@ -48,7 +48,7 @@ from collections import Counter
 
 ### Installing
 
-Download the './website' folder of our repo. You will need to modify the Spotify Credentials in `app.py	` before you run it. Go to [Spotify For Developers](https://developer.spotify.com/dashboard/) to create your own credentials
+Download the './website' folder of our repo. You will need to modify the Spotify Credentials in `app.py	` before you run it. Go to [Spotify For Developers](https://developer.spotify.com/dashboard/) to create your own credentials. You will also need to unzip the tf_idf_df csv.
 
 ```python
 os.environ["SPOTIPY_CLIENT_ID"] = "***"
