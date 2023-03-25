@@ -25,8 +25,8 @@ from collections import Counter
 # from tqdm import tqdm
 
 # Spotify credentials (unique to user) using different one to see if it works
-os.environ["SPOTIPY_CLIENT_ID"] = "bdf64242b8364ab5b264d3c14e8e9af6"
-os.environ["SPOTIPY_CLIENT_SECRET"] = "3ed931eb80d8412292a50a10ed96e611"
+os.environ["SPOTIPY_CLIENT_ID"] = "37af597b7a184dc19f140e1796cc3655"
+os.environ["SPOTIPY_CLIENT_SECRET"] = "9ad98a09d833493793ff942bd3271d88"
 os.environ['SPOTIPY_REDIRECT_URI'] = "http://localhost:5001"
 sp = spotipy.Spotify(client_credentials_manager =      
                      SpotifyClientCredentials(requests_timeout = 10))
@@ -144,18 +144,21 @@ def get_top_items(playlist, n = 10):
     total_score = Counter()
     for track in playlist['tracks']:
         #using addition assignment to add each similarity score
-        total_score += item_similarity(track['track_uri'])
+            if track['track_uri'] in binary_df.index:
+                total_score += item_similarity(track['track_uri'])
     #applying IDF weighting to total similarity score
     for uri in total_score.keys():
         total_score[uri] *= idf_df.loc[uri][0]
     #preventing songs in user input playlist from being suggested
     repetition_blocker(total_score, playlist)
-    #using heap to find n highest total similarity scores
-    top_songs = heapq.nlargest(n, total_score.items(), key=lambda x: x[1])
+    #using heap to find list of URIs associated with highest total similarity scores
+    top_songs = [items[0] for items in heapq.nlargest(n, total_score.items(), key=lambda x: x[1])]
+    print(top_songs)
+    #top_songs = heapq.nlargest(n, total_score.items(), key=lambda x: x[1])
     #returning a list of tuples containing the track name, artist name, and a link to the song for the most similar songs
-    return [(song_df['track_name'][song_df['uri'] == items[0]].values[0],
-            song_df['artist_name'][song_df['uri'] == items[0]].values[0],
-            '//open.spotify.com/track/' + song_df['id'][song_df['uri'] == items[0]].values[0]) for items in top_songs]
+    return [(song_df['track_name'][song_df['uri'] == uri].values[0],
+            song_df['artist_name'][song_df['uri'] == uri].values[0],
+            '//open.spotify.com/track/' + song_df['id'][song_df['uri'] == uri].values[0]) for uri in top_songs]
 
 def is_uri_in_playlist(uri, playlist):
     #iterating through each track in user input playlist
@@ -171,7 +174,7 @@ def session_similarity(playlist, n = 10):
     #creating a binary encoding of the user input playlist w.r.t. dataset
     encoded_playlist = [int(is_uri_in_playlist(uri, playlist)) for uri in binary_df.index]
     #computing similarity between input playlist and all other playlists
-    session_similarity = cosine_similarity([encoded_playlist], binary_df).flatten()
+    session_similarity = cosine_similarity(binary_df.values.T, [encoded_playlist]).flatten()
     #creating an empty counter to store total similarity score
     total_score = {}
     #iterating through each song in dataset
@@ -181,11 +184,11 @@ def session_similarity(playlist, n = 10):
     #preventing songs in user input playlist from being suggested
     repetition_blocker(total_score, playlist)
     #using heap to find n highest total similarity scores
-    top_songs = heapq.nlargest(n, total_score.items(), key=lambda x: x[1])
+    top_songs = [items[0] for items in heapq.nlargest(n, total_score.items(), key=lambda x: x[1])]
     #returning a list of tuples containing the track name, artist name, and a link to the song for the most similar songs
-    return [(song_df['track_name'][song_df['uri'] == items[0]].values[0],
-            song_df['artist_name'][song_df['uri'] == items[0]].values[0],
-            '//open.spotify.com/track/' + song_df['id'][song_df['uri'] == items[0]].values[0]) for items in top_songs]
+    return [(song_df['track_name'][song_df['uri'] == uri].values[0],
+            song_df['artist_name'][song_df['uri'] == uri].values[0],
+            '//open.spotify.com/track/' + song_df['id'][song_df['uri'] == uri].values[0]) for uri in top_songs]
 
 def tf_idf_encoder(uri, playlist):
     #iterating through each track in user input playlist
@@ -199,9 +202,9 @@ def tf_idf_encoder(uri, playlist):
 
 def tf_idf_similarity(playlist, n = 10):
     #creating a tf-idf vector based on the user playlist
-    tf_idf_playlist = [tf_idf_encoder(uri, playlist)*(1/(len(playlist['tracks']+50))) for uri in tf_idf_df.index]
+    tf_idf_playlist = [tf_idf_encoder(uri, playlist)*(1/(len(playlist['tracks'])+50)) for uri in tf_idf_df.index]
     #computing similarity between input playlist and all other playlists w.r.t. tf-idf metric
-    tf_idf_similarity = cosine_similarity([tf_idf_playlist], tf_idf_df).flatten()
+    tf_idf_similarity = cosine_similarity(tf_idf_df.values.T, [tf_idf_playlist]).flatten()
     #creating an empty counter to store total similarity score
     total_score = {}
     for uri in tf_idf_df.index:
@@ -210,10 +213,10 @@ def tf_idf_similarity(playlist, n = 10):
     #preventing songs in user input playlist from being suggested
     repetition_blocker(total_score, playlist)
     #using heap to find n highest total similarity scores
-    top_songs = heapq.nlargest(n, total_score.items(), key=lambda x: x[1])
-    return [(song_df['track_name'][song_df['uri'] == items[0]].values[0],
-            song_df['artist_name'][song_df['uri'] == items[0]].values[0],
-            '//open.spotify.com/track/' + song_df['id'][song_df['uri'] == items[0]].values[0]) for items in top_songs]
+    top_songs = [items[0] for items in heapq.nlargest(n, total_score.items(), key=lambda x: x[1])]
+    return [(song_df['track_name'][song_df['uri'] == uri].values[0],
+            song_df['artist_name'][song_df['uri'] == uri].values[0],
+            '//open.spotify.com/track/' + song_df['id'][song_df['uri'] == uri].values[0]) for uri in top_songs]
 
 def get_playlist_track_URIs(playlist_id):
     '''
@@ -228,7 +231,7 @@ def get_playlist_track_URIs(playlist_id):
                             A list of the track names for all tracks in the playlist.
     '''
     # Set up authorization using the Spotify client ID and secret
-    client_credentials_manager = SpotifyClientCredentials(client_id='bdf64242b8364ab5b264d3c14e8e9af6', client_secret='3ed931eb80d8412292a50a10ed96e611')
+    client_credentials_manager = SpotifyClientCredentials(client_id='37af597b7a184dc19f140e1796cc3655', client_secret='9ad98a09d833493793ff942bd3271d88')
     sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
     
     # Get track URIs and names from playlist
@@ -274,6 +277,9 @@ def recommend():
                 playlist = get_playlist_track_URIs(playlist)
             
             top_songs = get_top_songs(playlist, song_df, feats_df)
+            #top_songs_item = get_top_items(playlist, n = 10)
+            #top_songs_session = session_similarity(playlist, n=10)
+            #top_songs_tf_idf = tf_idf_similarity(playlist, n=10)
             # display the top songs
             return render_template('recommend.html', recs = top_songs)
         except:
